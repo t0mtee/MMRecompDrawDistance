@@ -1,0 +1,60 @@
+This only patches one function, and it's the one not patched by base recomp, but base recomp's disabling of frustum culling bugs this out so that function HAS to be replaced as of right now.
+
+// #region 2S2H [Enhancements] Allows us to increase the draw and update distance independently, mostly a modified
+// version of the function above
+s32 Ship_CalcShouldDrawAndUpdate(PlayState* play, Actor* actor, Vec3f* projectedPos, f32 projectedW) {
+    // Check if the actor passes its original/vanilla culling requirements
+    if (Actor_CullingVolumeTest(play, actor, projectedPos, projectedW)) {
+        return true;
+    }
+
+    // Apply distance scale to forward cullzone check
+    bool isWithingForwardCullZone =
+        (-actor->cullingVolumeScale < projectedPos->z) &&
+        (projectedPos->z < ((actor->cullingVolumeDistance + actor->cullingVolumeScale) * 5));
+
+    if (isWithingForwardCullZone) {
+        // Ensure the projected W value is at least 1.0
+        f32 clampedProjectedW = CLAMP_MIN(projectedW, 1.0f);
+        f32 aspectMultiplier = 1.0f;
+        f32 cullingVolumeScaleDiagonal;
+        f32 cullingVolumeScaleVertical;
+        f32 cullingVolumeDownwardAdjusted;
+
+        // Adjust calculations if the field of view is not the default 60 degrees
+        if (play->view.fovy != 60.0f) {
+            cullingVolumeScaleDiagonal =
+                actor->cullingVolumeScale * play->projectionMtxFDiagonal.x * 0.76980036f; // sqrt(16/27)
+
+            cullingVolumeScaleVertical = play->projectionMtxFDiagonal.y * 0.57735026f; // 1 / sqrt(3)
+            cullingVolumeDownwardAdjusted = actor->cullingVolumeScale * cullingVolumeScaleVertical;
+            cullingVolumeScaleVertical *= actor->cullingVolumeDownward;
+        } else {
+            cullingVolumeDownwardAdjusted = cullingVolumeScaleDiagonal = actor->cullingVolumeScale;
+            cullingVolumeScaleVertical = actor->cullingVolumeDownward;
+        }
+
+        // Apply adjsuted aspect ratio to just the horizontal cullzone check
+        bool isWithinHorizontalCullZone =
+            ((fabsf(projectedPos->x) - cullingVolumeScaleDiagonal) < (clampedProjectedW * aspectMultiplier));
+        bool isAboveBottomOfCullZone = ((-clampedProjectedW < (projectedPos->y + cullingVolumeScaleVertical)));
+        bool isBelowTopOfCullZone = ((projectedPos->y - cullingVolumeDownwardAdjusted) < clampedProjectedW);
+
+        if (isWithinHorizontalCullZone && isAboveBottomOfCullZone && isBelowTopOfCullZone) {
+            // Add additional overries here for glitch useful actors when those are reported
+            return true;
+        }
+    }
+
+    return false;
+}
+
+RECOMP_PATCH s32 Actor_CullingCheck(PlayState* play, Actor* actor) {
+    if (Ship_CalcShouldDrawAndUpdate(play, actor, &actor->projectedPos, actor->projectedW)) {
+        actor->flags |= ACTOR_FLAG_INSIDE_CULLING_VOLUME;
+        return true;
+    } else {
+        actor->flags &= ~ACTOR_FLAG_INSIDE_CULLING_VOLUME;
+        return false;
+    }
+}
