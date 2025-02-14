@@ -5,6 +5,10 @@
 #include "overlays/actors/ovl_En_Wood02/z_en_wood02.h"
 #include "z64actor.h"
 
+RECOMP_IMPORT("*", float recomp_get_target_aspect_ratio(float ratio))
+
+const float original_aspect_ratio = ((float)SCREEN_WIDTH) / ((float)SCREEN_HEIGHT);
+
 RECOMP_FORCE_PATCH s32 Actor_CullingVolumeTest(PlayState* play, Actor* actor, Vec3f* projPos, f32 projW) {
     if ((projPos->z > -actor->cullingVolumeScale) &&
         (projPos->z < (actor->cullingVolumeDistance + actor->cullingVolumeScale))) {
@@ -51,7 +55,7 @@ RECOMP_FORCE_PATCH s32 Actor_CullingVolumeTest(PlayState* play, Actor* actor, Ve
     if (isWithingForwardCullZone) {
         // Ensure the projected W value is at least 1.0
         f32 clampedprojW = CLAMP_MIN(projW, 1.0f);
-        f32 aspectMultiplier = 1.0f;
+        f32 aspectMultiplier = recomp_get_target_aspect_ratio(original_aspect_ratio) / original_aspect_ratio;
         f32 cullingVolumeScaleDiagonal;
         f32 cullingVolumeScaleVertical;
         f32 cullingVolumeDownwardAdjusted;
@@ -68,10 +72,6 @@ RECOMP_FORCE_PATCH s32 Actor_CullingVolumeTest(PlayState* play, Actor* actor, Ve
             cullingVolumeDownwardAdjusted = cullingVolumeScaleDiagonal = actor->cullingVolumeScale;
             cullingVolumeScaleVertical = actor->cullingVolumeDownward;
         }
-
-        // if (CVarGetInteger("gEnhancements.Graphics.ActorCullingAccountsForWidescreen", 0)) {
-        //     aspectMultiplier = Ship_GetExtendedAspectRatioMultiplier();
-        // }
 
         // Apply adjsuted aspect ratio to just the horizontal cullzone check
         bool isWithinHorizontalCullZone =
