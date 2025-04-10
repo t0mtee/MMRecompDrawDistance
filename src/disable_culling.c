@@ -3,11 +3,45 @@
 
 #include "overlays/actors/ovl_Obj_Grass/z_obj_grass.h"
 #include "overlays/actors/ovl_En_Wood02/z_en_wood02.h"
+#include "overlays/actors/ovl_En_Ishi/z_en_ishi.h"
+#include "overlays/actors/ovl_En_Kusa/z_en_kusa.h"
+#include "overlays/actors/ovl_En_Kusa2/z_en_kusa2.h"
+#include "overlays/actors/ovl_Obj_Bombiwa/z_obj_bombiwa.h"
+#include "overlays/actors/ovl_Obj_Hamishi/z_obj_hamishi.h"
+#include "overlays/actors/ovl_Obj_Mure/z_obj_mure.h"
+#include "overlays/actors/ovl_Obj_Mure2/z_obj_mure2.h"
 #include "z64actor.h"
 
 RECOMP_IMPORT("*", float recomp_get_target_aspect_ratio(float ratio))
 
 const float original_aspect_ratio = ((float)SCREEN_WIDTH) / ((float)SCREEN_HEIGHT);
+const int multiplier = 10000;
+
+// Gets the additional ratio of the screen compared to the original 4:3 ratio, clamping to 1 if smaller
+f32 Ship_GetExtendedAspectRatioMultiplier() {
+    return MAX(recomp_get_target_aspect_ratio(original_aspect_ratio) / original_aspect_ratio, 1.0f);
+}
+
+// Enables Extended Culling options on specific actors by applying an inverse ratio of the draw distance slider
+// to the projected Z value of the actor. This tricks distance checks without having to replace hardcoded values.
+// Requires that Ship_ExtendedCullingActorRestoreProjectedPos is called within the same function scope.
+void Ship_ExtendedCullingActorAdjustProjectedZ(Actor* actor) {
+    actor->projectedPos.z /= multiplier;
+}
+
+// Enables Extended Culling options on specific actors by applying an inverse ratio of the widescreen aspect ratio
+// to the projected X value of the actor. This tricks distance checks without having to replace hardcoded values.
+// Requires that Ship_ExtendedCullingActorRestoreProjectedPos is called within the same function scope.
+void Ship_ExtendedCullingActorAdjustProjectedX(Actor* actor) {
+    actor->projectedPos.x /= Ship_GetExtendedAspectRatioMultiplier();
+    
+}
+
+// Restores the projectedPos values on the actor after modifications from the Extended Culling hacks
+void Ship_ExtendedCullingActorRestoreProjectedPos(PlayState* play, Actor* actor) {
+    f32 invW = 0.0f;
+    Actor_GetProjectedPos(play, &actor->world.pos, &actor->projectedPos, &invW);
+}
 
 RECOMP_FORCE_PATCH s32 Actor_CullingVolumeTest(PlayState* play, Actor* actor, Vec3f* projPos, f32 projW) {
     if ((projPos->z > -actor->cullingVolumeScale) &&
@@ -50,12 +84,12 @@ RECOMP_FORCE_PATCH s32 Actor_CullingVolumeTest(PlayState* play, Actor* actor, Ve
     // Apply distance scale to forward cullzone check
     bool isWithingForwardCullZone =
         (-actor->cullingVolumeScale < projPos->z) &&
-        (projPos->z < ((actor->cullingVolumeDistance + actor->cullingVolumeScale) * 5));
+        (projPos->z < ((actor->cullingVolumeDistance + actor->cullingVolumeScale) * multiplier));
 
     if (isWithingForwardCullZone) {
         // Ensure the projected W value is at least 1.0
         f32 clampedprojW = CLAMP_MIN(projW, 1.0f);
-        f32 aspectMultiplier = recomp_get_target_aspect_ratio(original_aspect_ratio) / original_aspect_ratio;
+        f32 aspectMultiplier = Ship_GetExtendedAspectRatioMultiplier();
         f32 cullingVolumeScaleDiagonal;
         f32 cullingVolumeScaleVertical;
         f32 cullingVolumeDownwardAdjusted;
@@ -90,7 +124,7 @@ RECOMP_FORCE_PATCH s32 Actor_CullingVolumeTest(PlayState* play, Actor* actor, Ve
     // ----- 2SHIP CODE -----
 }
 
-extern s16 func_809A9110(PlayState* play, Vec3f* pos);
+extern s32 func_809A9110(PlayState* play, Vec3f* pos);
 
 RECOMP_PATCH void ObjGrass_InitDraw(ObjGrass* this, PlayState* play) {
     ObjGrassGroup* grassGroup;
@@ -104,7 +138,7 @@ RECOMP_PATCH void ObjGrass_InitDraw(ObjGrass* this, PlayState* play) {
         grassGroup = &this->grassGroups[i];
 
         eyeDist = Math3D_Vec3fDistSq(&grassGroup->homePos, &GET_ACTIVE_CAM(play)->eye);
-        eyeDist = SQ(sqrtf(eyeDist) / 10000000); // Hijacked
+        eyeDist = SQ(sqrtf(eyeDist) / multiplier); // Hijacked
 
         if ((eyeDist < SQ(1280.0f)) && func_809A9110(play, &grassGroup->homePos)) {
             grassGroup->flags |= OBJ_GRASS_GROUP_DRAW;
@@ -121,7 +155,7 @@ RECOMP_PATCH void ObjGrass_InitDraw(ObjGrass* this, PlayState* play) {
                         grassElem->alpha = 255;
                     } else {
                         distSq = Math3D_Vec3fDistSq(&grassElem->pos, &GET_ACTIVE_CAM(play)->eye);
-                        distSq = SQ(sqrtf(distSq) / 100000000); // Hijacked
+                        distSq = SQ(sqrtf(distSq) / multiplier); // Hijacked
                         if ((distSq <= SQ(1080.0f)) ||
                             ((grassElem->flags & OBJ_GRASS_ELEM_UNDERWATER) && (distSq < SQ(1180.0f)))) {
                             grassElem->alpha = 255;
@@ -162,4 +196,177 @@ RECOMP_PATCH s32 EnWood02_SpawnZoneCheck(EnWood02* this, PlayState* play, Vec3f*
     //     return true;
     // }
     // return false;
+}
+
+EnIshi* EnIshi_1_this;
+PlayState* EnIshi_1_play;
+
+RECOMP_HOOK("func_8095F210") void EnIshi_Init_1(EnIshi* this, PlayState* play) {
+    EnIshi_1_this = this;
+    EnIshi_1_play = play;
+    Ship_ExtendedCullingActorAdjustProjectedZ(&this->actor);
+}
+
+RECOMP_HOOK_RETURN("func_8095F210") void EnIshi_Return_1() {
+    Ship_ExtendedCullingActorRestoreProjectedPos(EnIshi_1_play, &EnIshi_1_this->actor);
+}
+
+EnIshi* EnIshi_2_this;
+PlayState* EnIshi_2_play;
+
+RECOMP_HOOK("func_8095F36C") void EnIshi_Init_2(EnIshi* this, PlayState* play) {
+    EnIshi_2_this = this;
+    EnIshi_2_play = play;
+    Ship_ExtendedCullingActorAdjustProjectedZ(&this->actor);
+}
+
+RECOMP_HOOK_RETURN("func_8095F36C") void EnIshi_Return_2() {
+    Ship_ExtendedCullingActorRestoreProjectedPos(EnIshi_2_play, &EnIshi_2_this->actor);
+}
+
+EnKusa* EnKusa_this;
+PlayState* EnKusa_play;
+
+RECOMP_HOOK("EnKusa_DrawBush") void EnKusa_Init(Actor* thisx, PlayState* play2) {
+    EnKusa_this = (EnKusa*)thisx;
+    EnKusa_play = play2;
+    Ship_ExtendedCullingActorAdjustProjectedZ(&EnKusa_this->actor);
+}
+
+RECOMP_HOOK_RETURN("EnKusa_DrawBush") void EnKusa_Return() {
+    Ship_ExtendedCullingActorRestoreProjectedPos(EnKusa_play, &EnKusa_this->actor);
+}
+
+EnKusa2* EnKusa2_1_this;
+PlayState* EnKusa2_1_play;
+
+RECOMP_HOOK("func_80A5D62C") void EnKusa2_1_Init(EnKusa2* this, PlayState* play) {
+    EnKusa2_1_this = this;
+    EnKusa2_1_play = play;
+    Ship_ExtendedCullingActorAdjustProjectedX(&this->actor);
+    Ship_ExtendedCullingActorAdjustProjectedZ(&this->actor);
+}
+
+RECOMP_HOOK_RETURN("func_80A5D62C") void EnKusa2_1_Return() {
+    Ship_ExtendedCullingActorRestoreProjectedPos(EnKusa2_1_play, &EnKusa2_1_this->actor);
+}
+
+EnKusa2* EnKusa2_2_this;
+PlayState* EnKusa2_2_play;
+
+RECOMP_HOOK("func_80A5D6C4") void EnKusa2_2_Init(EnKusa2* this, PlayState* play) {
+    EnKusa2_2_this = this;
+    EnKusa2_2_play = play;
+    Ship_ExtendedCullingActorAdjustProjectedX(&this->actor);
+    Ship_ExtendedCullingActorAdjustProjectedZ(&this->actor);
+}
+
+RECOMP_HOOK_RETURN("func_80A5D6C4") void EnKusa2_2_Return() {
+    Ship_ExtendedCullingActorRestoreProjectedPos(EnKusa2_2_play, &EnKusa2_2_this->actor);
+}
+
+EnKusa2* EnKusa2_3_this;
+PlayState* EnKusa2_3_play;
+
+RECOMP_HOOK("EnKusa2_Draw") void EnKusa2_3_Init(EnKusa2* this, PlayState* play) {
+    EnKusa2_3_this = this;
+    EnKusa2_3_play = play;
+    Ship_ExtendedCullingActorAdjustProjectedZ(&this->actor);
+}
+
+RECOMP_HOOK_RETURN("EnKusa2_Draw") void EnKusa2_3_Return() {
+    Ship_ExtendedCullingActorRestoreProjectedPos(EnKusa2_3_play, &EnKusa2_3_this->actor);
+}
+
+ObjBombiwa* ObjBombiwa_1_this;
+PlayState* ObjBombiwa_1_play;
+
+RECOMP_HOOK("func_8093A418") void ObjBombiwa_1_Init(Actor* thisx, PlayState* play) {
+    ObjBombiwa_1_this = (ObjBombiwa*)thisx;
+    ObjBombiwa_1_play = play;
+    Ship_ExtendedCullingActorAdjustProjectedZ(&ObjBombiwa_1_this->actor);
+}
+
+RECOMP_HOOK_RETURN("func_8093A418") void ObjBombiwa_1_Return() {
+    Ship_ExtendedCullingActorRestoreProjectedPos(ObjBombiwa_1_play, &ObjBombiwa_1_this->actor);
+}
+
+ObjBombiwa* ObjBombiwa_2_this;
+PlayState* ObjBombiwa_2_play;
+
+RECOMP_HOOK("func_8093A608") void ObjBombiwa_2_Init(Actor* thisx, PlayState* play) {
+    ObjBombiwa_2_this = (ObjBombiwa*)thisx;
+    ObjBombiwa_2_play = play;
+    Ship_ExtendedCullingActorAdjustProjectedZ(&ObjBombiwa_2_this->actor);
+}
+
+RECOMP_HOOK_RETURN("func_8093A608") void ObjBombiwa_2_Return() {
+    Ship_ExtendedCullingActorRestoreProjectedPos(ObjBombiwa_2_play, &ObjBombiwa_2_this->actor);
+}
+
+ObjHamishi* ObjHamishi_this;
+PlayState* ObjHamishi_play;
+
+RECOMP_HOOK("ObjHamishi_Draw") void ObjHamishi_Init(Actor* thisx, PlayState* play) {
+    ObjHamishi_this = (ObjHamishi*)thisx;
+    ObjHamishi_play = play;
+    Ship_ExtendedCullingActorAdjustProjectedZ(&ObjHamishi_this->actor);
+}
+
+RECOMP_HOOK_RETURN("ObjHamishi_Draw") void ObjHamishi_Return() {
+    Ship_ExtendedCullingActorRestoreProjectedPos(ObjHamishi_play, &ObjHamishi_this->actor);
+}
+
+ObjMure* ObjMure_1_this;
+PlayState* ObjMure_1_play;
+
+RECOMP_HOOK("ObjMure_CulledState") void ObjMure_1_Init(ObjMure* this, PlayState* play) {
+    ObjMure_1_this = this;
+    ObjMure_1_play = play;
+    Ship_ExtendedCullingActorAdjustProjectedZ(&this->actor);
+}
+
+RECOMP_HOOK_RETURN("ObjMure_CulledState") void ObjMure_1_Return() {
+    Ship_ExtendedCullingActorRestoreProjectedPos(ObjMure_1_play, &ObjMure_1_this->actor);
+}
+
+ObjMure* ObjMure_2_this;
+PlayState* ObjMure_2_play;
+
+RECOMP_HOOK("ObjMure_ActiveState") void ObjMure_2_Init(ObjMure* this, PlayState* play) {
+    ObjMure_2_this = this;
+    ObjMure_2_play = play;
+    Ship_ExtendedCullingActorAdjustProjectedZ(&this->actor);
+}
+
+RECOMP_HOOK_RETURN("ObjMure_ActiveState") void ObjMure_2_Return() {
+    Ship_ExtendedCullingActorRestoreProjectedPos(ObjMure_2_play, &ObjMure_2_this->actor);
+}
+
+ObjMure2* ObjMure2_1_this;
+PlayState* ObjMure2_1_play;
+
+RECOMP_HOOK("ObjMure2_WaitForPlayerInRange") void ObjMure2_1_Init(ObjMure2* this, PlayState* play) {
+    ObjMure2_1_this = this;
+    ObjMure2_1_play = play;
+    Ship_ExtendedCullingActorAdjustProjectedX(&this->actor);
+    Ship_ExtendedCullingActorAdjustProjectedZ(&this->actor);
+}
+
+RECOMP_HOOK_RETURN("ObjMure2_WaitForPlayerInRange") void ObjMure2_1_Return() {
+    Ship_ExtendedCullingActorRestoreProjectedPos(ObjMure2_1_play, &ObjMure2_1_this->actor);
+}
+
+ObjMure2* ObjMure2_2_this;
+PlayState* ObjMure2_2_play;
+
+RECOMP_HOOK("ObjMure2_WaitForPlayerOutOfRange") void ObjMure2_2_Init(ObjMure2* this, PlayState* play) {
+    ObjMure2_2_this = this;
+    ObjMure2_2_play = play;
+    Ship_ExtendedCullingActorAdjustProjectedX(&this->actor);
+    Ship_ExtendedCullingActorAdjustProjectedZ(&this->actor);
+}
+
+RECOMP_HOOK_RETURN("ObjMure2_WaitForPlayerOutOfRange") void ObjMure2_2_Return() {
+    Ship_ExtendedCullingActorRestoreProjectedPos(ObjMure2_2_play, &ObjMure2_2_this->actor);
 }
