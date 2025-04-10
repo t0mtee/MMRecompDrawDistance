@@ -1,6 +1,7 @@
 #include "modding.h"
 #include "global.h"
 
+#include "z64actor.h"
 #include "overlays/actors/ovl_Obj_Grass/z_obj_grass.h"
 #include "overlays/actors/ovl_En_Wood02/z_en_wood02.h"
 #include "overlays/actors/ovl_En_Ishi/z_en_ishi.h"
@@ -10,7 +11,6 @@
 #include "overlays/actors/ovl_Obj_Hamishi/z_obj_hamishi.h"
 #include "overlays/actors/ovl_Obj_Mure/z_obj_mure.h"
 #include "overlays/actors/ovl_Obj_Mure2/z_obj_mure2.h"
-#include "z64actor.h"
 
 RECOMP_IMPORT("*", float recomp_get_target_aspect_ratio(float ratio))
 
