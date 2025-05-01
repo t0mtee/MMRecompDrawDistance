@@ -19,12 +19,12 @@ This mod prevents objects from disappearing when you're a good distance away fro
 
 Credit to Harbour Masters for originally designing the code - this is mostly a port of their functionality.
 
-May have some bugs, please report any you find here: https://github.com/t0mtee/MMRecompDrawDistance
+GitHub Repository: https://github.com/t0mtee/MMRecompDrawDistance/
 """
 
 # A short description that will show up in this mod's entry in the mod list. This should be human readable and kept short
 # to prevent it from being cut off due to the limited space.
-short_description = "Disables Draw Distance Culling"
+short_description = "Stops objects from disappearing when you're far away."
 
 # Authors of this mod.
 authors = [ "tomtee", "Harbour Masters" ]
