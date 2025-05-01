@@ -198,175 +198,139 @@ RECOMP_PATCH s32 EnWood02_SpawnZoneCheck(EnWood02* this, PlayState* play, Vec3f*
     // return false;
 }
 
-EnIshi* EnIshi_1_this;
-PlayState* EnIshi_1_play;
+PlayState* play_state;
+#define FIX_INIT(name)      name = this;\
+                            play_state = play;\
+                            Ship_ExtendedCullingActorAdjustProjectedZ(&name->actor);
+
+#define FIX_RETURN(name)    Ship_ExtendedCullingActorRestoreProjectedPos(play_state, &name->actor);
+
+EnIshi* en_ishi;
 
 RECOMP_HOOK("func_8095F210") void EnIshi_Init_1(EnIshi* this, PlayState* play) {
-    EnIshi_1_this = this;
-    EnIshi_1_play = play;
-    Ship_ExtendedCullingActorAdjustProjectedZ(&this->actor);
+    FIX_INIT(en_ishi)
 }
 
 RECOMP_HOOK_RETURN("func_8095F210") void EnIshi_Return_1() {
-    Ship_ExtendedCullingActorRestoreProjectedPos(EnIshi_1_play, &EnIshi_1_this->actor);
+    FIX_RETURN(en_ishi)
 }
 
-EnIshi* EnIshi_2_this;
-PlayState* EnIshi_2_play;
-
 RECOMP_HOOK("func_8095F36C") void EnIshi_Init_2(EnIshi* this, PlayState* play) {
-    EnIshi_2_this = this;
-    EnIshi_2_play = play;
-    Ship_ExtendedCullingActorAdjustProjectedZ(&this->actor);
+    FIX_INIT(en_ishi)
 }
 
 RECOMP_HOOK_RETURN("func_8095F36C") void EnIshi_Return_2() {
-    Ship_ExtendedCullingActorRestoreProjectedPos(EnIshi_2_play, &EnIshi_2_this->actor);
+    FIX_RETURN(en_ishi)
 }
 
-EnKusa* EnKusa_this;
-PlayState* EnKusa_play;
+EnKusa* en_kusa;
 
 RECOMP_HOOK("EnKusa_DrawBush") void EnKusa_Init(Actor* thisx, PlayState* play2) {
-    EnKusa_this = (EnKusa*)thisx;
-    EnKusa_play = play2;
-    Ship_ExtendedCullingActorAdjustProjectedZ(&EnKusa_this->actor);
+    en_kusa = (EnKusa*)thisx;
+    play_state = play2;
+    Ship_ExtendedCullingActorAdjustProjectedZ(&en_kusa->actor);
 }
 
 RECOMP_HOOK_RETURN("EnKusa_DrawBush") void EnKusa_Return() {
-    Ship_ExtendedCullingActorRestoreProjectedPos(EnKusa_play, &EnKusa_this->actor);
+    FIX_RETURN(en_kusa)
 }
 
-EnKusa2* EnKusa2_1_this;
-PlayState* EnKusa2_1_play;
+EnKusa2* en_kusa_2;
 
 RECOMP_HOOK("func_80A5D62C") void EnKusa2_1_Init(EnKusa2* this, PlayState* play) {
-    EnKusa2_1_this = this;
-    EnKusa2_1_play = play;
+    FIX_INIT(en_kusa_2)
     Ship_ExtendedCullingActorAdjustProjectedX(&this->actor);
-    Ship_ExtendedCullingActorAdjustProjectedZ(&this->actor);
 }
 
 RECOMP_HOOK_RETURN("func_80A5D62C") void EnKusa2_1_Return() {
-    Ship_ExtendedCullingActorRestoreProjectedPos(EnKusa2_1_play, &EnKusa2_1_this->actor);
+    FIX_RETURN(en_kusa_2)
 }
 
-EnKusa2* EnKusa2_2_this;
-PlayState* EnKusa2_2_play;
-
 RECOMP_HOOK("func_80A5D6C4") void EnKusa2_2_Init(EnKusa2* this, PlayState* play) {
-    EnKusa2_2_this = this;
-    EnKusa2_2_play = play;
+    FIX_INIT(en_kusa_2)
     Ship_ExtendedCullingActorAdjustProjectedX(&this->actor);
-    Ship_ExtendedCullingActorAdjustProjectedZ(&this->actor);
 }
 
 RECOMP_HOOK_RETURN("func_80A5D6C4") void EnKusa2_2_Return() {
-    Ship_ExtendedCullingActorRestoreProjectedPos(EnKusa2_2_play, &EnKusa2_2_this->actor);
+    FIX_RETURN(en_kusa_2)
 }
 
-EnKusa2* EnKusa2_3_this;
-PlayState* EnKusa2_3_play;
-
 RECOMP_HOOK("EnKusa2_Draw") void EnKusa2_3_Init(EnKusa2* this, PlayState* play) {
-    EnKusa2_3_this = this;
-    EnKusa2_3_play = play;
-    Ship_ExtendedCullingActorAdjustProjectedZ(&this->actor);
+    FIX_INIT(en_kusa_2)
 }
 
 RECOMP_HOOK_RETURN("EnKusa2_Draw") void EnKusa2_3_Return() {
-    Ship_ExtendedCullingActorRestoreProjectedPos(EnKusa2_3_play, &EnKusa2_3_this->actor);
+    FIX_RETURN(en_kusa_2)
 }
 
-ObjBombiwa* ObjBombiwa_1_this;
-PlayState* ObjBombiwa_1_play;
+ObjBombiwa* obj_bombiwa;
 
 RECOMP_HOOK("func_8093A418") void ObjBombiwa_1_Init(Actor* thisx, PlayState* play) {
-    ObjBombiwa_1_this = (ObjBombiwa*)thisx;
-    ObjBombiwa_1_play = play;
-    Ship_ExtendedCullingActorAdjustProjectedZ(&ObjBombiwa_1_this->actor);
+    obj_bombiwa = (ObjBombiwa*)thisx;
+    play_state = play;
+    Ship_ExtendedCullingActorAdjustProjectedZ(&obj_bombiwa->actor);
 }
 
 RECOMP_HOOK_RETURN("func_8093A418") void ObjBombiwa_1_Return() {
-    Ship_ExtendedCullingActorRestoreProjectedPos(ObjBombiwa_1_play, &ObjBombiwa_1_this->actor);
+    FIX_RETURN(obj_bombiwa)
 }
 
-ObjBombiwa* ObjBombiwa_2_this;
-PlayState* ObjBombiwa_2_play;
-
 RECOMP_HOOK("func_8093A608") void ObjBombiwa_2_Init(Actor* thisx, PlayState* play) {
-    ObjBombiwa_2_this = (ObjBombiwa*)thisx;
-    ObjBombiwa_2_play = play;
-    Ship_ExtendedCullingActorAdjustProjectedZ(&ObjBombiwa_2_this->actor);
+    obj_bombiwa = (ObjBombiwa*)thisx;
+    play_state = play;
+    Ship_ExtendedCullingActorAdjustProjectedZ(&obj_bombiwa->actor);
 }
 
 RECOMP_HOOK_RETURN("func_8093A608") void ObjBombiwa_2_Return() {
-    Ship_ExtendedCullingActorRestoreProjectedPos(ObjBombiwa_2_play, &ObjBombiwa_2_this->actor);
+    FIX_RETURN(obj_bombiwa)
 }
 
-ObjHamishi* ObjHamishi_this;
-PlayState* ObjHamishi_play;
+ObjHamishi* obj_hamishi;
 
 RECOMP_HOOK("ObjHamishi_Draw") void ObjHamishi_Init(Actor* thisx, PlayState* play) {
-    ObjHamishi_this = (ObjHamishi*)thisx;
-    ObjHamishi_play = play;
-    Ship_ExtendedCullingActorAdjustProjectedZ(&ObjHamishi_this->actor);
+    obj_hamishi = (ObjHamishi*)thisx;
+    play_state = play;
+    Ship_ExtendedCullingActorAdjustProjectedZ(&obj_hamishi->actor);
 }
 
 RECOMP_HOOK_RETURN("ObjHamishi_Draw") void ObjHamishi_Return() {
-    Ship_ExtendedCullingActorRestoreProjectedPos(ObjHamishi_play, &ObjHamishi_this->actor);
+    FIX_RETURN(obj_hamishi)
 }
 
-ObjMure* ObjMure_1_this;
-PlayState* ObjMure_1_play;
+ObjMure* obj_mure;
 
 RECOMP_HOOK("ObjMure_CulledState") void ObjMure_1_Init(ObjMure* this, PlayState* play) {
-    ObjMure_1_this = this;
-    ObjMure_1_play = play;
-    Ship_ExtendedCullingActorAdjustProjectedZ(&this->actor);
+    FIX_INIT(obj_mure)
 }
 
 RECOMP_HOOK_RETURN("ObjMure_CulledState") void ObjMure_1_Return() {
-    Ship_ExtendedCullingActorRestoreProjectedPos(ObjMure_1_play, &ObjMure_1_this->actor);
+    FIX_RETURN(obj_mure)
 }
 
-ObjMure* ObjMure_2_this;
-PlayState* ObjMure_2_play;
-
 RECOMP_HOOK("ObjMure_ActiveState") void ObjMure_2_Init(ObjMure* this, PlayState* play) {
-    ObjMure_2_this = this;
-    ObjMure_2_play = play;
-    Ship_ExtendedCullingActorAdjustProjectedZ(&this->actor);
+    FIX_INIT(obj_mure)
 }
 
 RECOMP_HOOK_RETURN("ObjMure_ActiveState") void ObjMure_2_Return() {
-    Ship_ExtendedCullingActorRestoreProjectedPos(ObjMure_2_play, &ObjMure_2_this->actor);
+    FIX_RETURN(obj_mure)
 }
 
-ObjMure2* ObjMure2_1_this;
-PlayState* ObjMure2_1_play;
+ObjMure2* obj_mure_2;
 
 RECOMP_HOOK("ObjMure2_WaitForPlayerInRange") void ObjMure2_1_Init(ObjMure2* this, PlayState* play) {
-    ObjMure2_1_this = this;
-    ObjMure2_1_play = play;
+    FIX_INIT(obj_mure_2)
     Ship_ExtendedCullingActorAdjustProjectedX(&this->actor);
-    Ship_ExtendedCullingActorAdjustProjectedZ(&this->actor);
 }
 
 RECOMP_HOOK_RETURN("ObjMure2_WaitForPlayerInRange") void ObjMure2_1_Return() {
-    Ship_ExtendedCullingActorRestoreProjectedPos(ObjMure2_1_play, &ObjMure2_1_this->actor);
+    FIX_RETURN(obj_mure_2)
 }
 
-ObjMure2* ObjMure2_2_this;
-PlayState* ObjMure2_2_play;
-
 RECOMP_HOOK("ObjMure2_WaitForPlayerOutOfRange") void ObjMure2_2_Init(ObjMure2* this, PlayState* play) {
-    ObjMure2_2_this = this;
-    ObjMure2_2_play = play;
+    FIX_INIT(obj_mure_2)
     Ship_ExtendedCullingActorAdjustProjectedX(&this->actor);
-    Ship_ExtendedCullingActorAdjustProjectedZ(&this->actor);
 }
 
 RECOMP_HOOK_RETURN("ObjMure2_WaitForPlayerOutOfRange") void ObjMure2_2_Return() {
-    Ship_ExtendedCullingActorRestoreProjectedPos(ObjMure2_2_play, &ObjMure2_2_this->actor);
+    FIX_RETURN(obj_mure_2)
 }
