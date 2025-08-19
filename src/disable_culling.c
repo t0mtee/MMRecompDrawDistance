@@ -25,20 +25,20 @@ f32 Ship_GetExtendedAspectRatioMultiplier() {
 // Enables Extended Culling options on specific actors by applying an inverse ratio of the draw distance slider
 // to the projected Z value of the actor. This tricks distance checks without having to replace hardcoded values.
 // Requires that Ship_ExtendedCullingActorRestoreProjectedPos is called within the same function scope.
-void Ship_ExtendedCullingActorAdjustProjectedZ(Actor* actor) {
+RECOMP_EXPORT void Ship_ExtendedCullingActorAdjustProjectedZ(Actor* actor) {
     actor->projectedPos.z /= multiplier;
 }
 
 // Enables Extended Culling options on specific actors by applying an inverse ratio of the widescreen aspect ratio
 // to the projected X value of the actor. This tricks distance checks without having to replace hardcoded values.
 // Requires that Ship_ExtendedCullingActorRestoreProjectedPos is called within the same function scope.
-void Ship_ExtendedCullingActorAdjustProjectedX(Actor* actor) {
+RECOMP_EXPORT void Ship_ExtendedCullingActorAdjustProjectedX(Actor* actor) {
     actor->projectedPos.x /= Ship_GetExtendedAspectRatioMultiplier();
     
 }
 
 // Restores the projectedPos values on the actor after modifications from the Extended Culling hacks
-void Ship_ExtendedCullingActorRestoreProjectedPos(PlayState* play, Actor* actor) {
+RECOMP_EXPORT void Ship_ExtendedCullingActorRestoreProjectedPos(PlayState* play, Actor* actor) {
     f32 invW = 0.0f;
     Actor_GetProjectedPos(play, &actor->world.pos, &actor->projectedPos, &invW);
 }
