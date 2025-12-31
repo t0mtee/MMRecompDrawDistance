@@ -5,3 +5,5 @@ This mod prevents objects from disappearing when you're a good distance away fro
 Also disables the Moon's LOD system.
 
 Credit to Harbour Masters for originally designing the code - this is mostly a port of their functionality.
+
+Requires [ObjDepLoader](https://thunderstore.io/c/zelda-64-recompiled/p/ProxyMM/ObjDepLoader/).

@@ -8,7 +8,7 @@
 id = "mm_recomp_draw_distance"
 
 # Version of this mod.
-version = "1.2.2"
+version = "1.3.0"
 
 # The name that will show up for this mod in the mod menu. This should be human readable.
 display_name = "Disable Draw Distance"
@@ -36,10 +36,7 @@ game_id = "mm"
 minimum_recomp_version = "1.2.0"
 
 # Dependency mods. Each entry is the mod's ID and then an optional minimum version of the dependency mod.
-dependencies = [
-# Example dependency:
-#    "modname:1.0.0"
-]
+dependencies = ["ProxyMM_ObjDepLoader"]
 
 # Native libraries (e.g. DLLs) and the functions they export.
 native_libraries = [
